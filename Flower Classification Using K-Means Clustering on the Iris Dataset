@@ -1,0 +1,623 @@
+Data Preparation: In order to perform a cluster analysis in R, we first need to prepare the data by
+ensuring that all of the columns are numerical variables. For this first part of the process, I had to convert
+the categorical column, “Species”, into a numeric factor. Then, the data was scaled to make the variables
+comparable.
+We are using the built-in R dataset “Iris”, which contains 150 observations of 5 variables for “Sepal.Length”,
+“Sepal.Width”, “Petal.Length”, “Petal.Width”, and “Species” type.
+library(tidyverse)
+## -- Attaching core tidyverse packages ------------------------ tidyverse 2.0.0 --
+## v dplyr 1.1.4 v readr 2.1.5
+## v forcats 1.0.0 v stringr 1.5.1
+## v ggplot2 3.4.4 v tibble 3.2.1
+## v lubridate 1.9.3 v tidyr 1.3.0
+## v purrr 1.0.2
+## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag() masks stats::lag()
+## i Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+library(cluster)
+library(factoextra)
+## Welcome! Want to learn more? See two factoextra-related books at https://goo.gl/ve3WBa
+data("iris")
+l<-levels(iris$Species)
+iris$Species<-as.numeric(iris$Species)
+head(iris$Species)
+## [1] 1 1 1 1 1 1
+class(iris$Species)
+## [1] "numeric"
+df<-iris
+df<-scale(df)
+head(df)
+## Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+## [1,] -0.8976739 1.01560199 -1.335752 -1.311052 -1.220656
+## [2,] -1.1392005 -0.13153881 -1.335752 -1.311052 -1.220656
+## [3,] -1.3807271 0.32731751 -1.392399 -1.311052 -1.220656
+## [4,] -1.5014904 0.09788935 -1.279104 -1.311052 -1.220656
+## [5,] -1.0184372 1.24503015 -1.335752 -1.311052 -1.220656
+## [6,] -0.5353840 1.93331463 -1.165809 -1.048667 -1.220656
+Clustering Distance Measures: This next step involved computing the distance between each pair of
+observation (the 654 obs. in the iris data frame), with the default being the Euclidean distance measure.
+This is an important step as it will have a great influence on the overall results of the clustering model. We
+also see the visualization of the distance matrix below.
+distance<-get_dist(df)
+fviz_dist(distance,gradient=list(low="blue", mid = "white", high = "red"))
+34034−−− 34683−−− 15027−−− 12459−−− 133019−−− 23562−−− 114356−−− 11796−−− 133346−−− 233127−−− 24098−−− 24181−−− 124448−−− 22375−−− 134189−−− 224027−−− 11425508−−− 111034489−−− 111013578−−− 111023139−−− 111344179−−− 111044236−−− 111114013−−− 111124556−−− 111124014−−− 111013288−−− 111233016−−− 111013669−−− 1662393−−− 588148−−− 789002−−− 688038−−− 699013−−− 469125−−− 599489−−− 111024079−−− 111133245−−− 111022477−−− 111112245−−− 11604723−−− 589567−−− 1680590−−− 789346−−− 669224−−− 779589−−− 577224−−− 578167−−− 557569−−− 677678−−− 558137−−−
+43−4−30−3−48−36−50−7−12−25−9−14−39−31−10−35−2−26−13−46−15−19−6−17−16−33−34−37−21−32−29−8−40−28−41−1−18−44−24−27−23−5−38−11−49−20−47−22−45−150−128−139−104−148−117−138−105−129−133−101−137−149−141−142−146−103−113−140−111−116−145−125−121−144−110−118−132−108−131−126−130−106−136−119−123−63−69−88−54−81−82−70−90−80−68−83−93−60−91−95−42−61−99−58−94−120−109−147−135−134−112−124−127−107−115−114−122−102−143−67−85−97−56−100−65−89−96−73−84−62−92−64−79−75−98−72−74−52−57−71−86−59−76−55−77−78−66−87−51−53−
+0
+2
+4
+6
+value
+K-Means Clustering: This next step is used to compute k-means in R with the “kmeans” function
+by grouping the data into 2 clusters with the “centers” function. The “nstart” function then reported 25
+configurations in where it reported the best one out of the 25. The output of the “kmeans” function then
+allowed me to find more information such as the cluster, centers, (totss) total sum of squares, (withinss)
+vector of within-cluster sum of squares, (tot.withinss) total within-cluster sum of squares, (betweenss) the
+between-cluster sum of squares, and size.
+k1<-kmeans(df,centers=2,nstart=25)
+str(k1)
+## List of 9
+## $ cluster : int [1:150] 1 1 1 1 1 1 1 1 1 1 ...
+## $ centers : num [1:2, 1:5] -1.011 0.506 0.85 -0.425 -1.301 ...
+## ..- attr(*, "dimnames")=List of 2
+## .. ..$ : chr [1:2] "1" "2"
+## .. ..$ : chr [1:5] "Sepal.Length" "Sepal.Width" "Petal.Length" "Petal.Width" ...
+## $ totss : num 745
+## $ withinss : num [1:2] 47.4 210.8
+## $ tot.withinss: num 258
+## $ betweenss : num 487
+## $ size : int [1:2] 50 100
+## $ iter : int 1
+## $ ifault : int 0
+## - attr(*, "class")= chr "kmeans"
+k1
+## K-means clustering with 2 clusters of sizes 50, 100
+##
+## Cluster means:
+## Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+## 1 -1.0111914 0.8504137 -1.300630 -1.2507035 -1.2206556
+## 2 0.5055957 -0.4252069 0.650315 0.6253518 0.6103278
+##
+## Clustering vector:
+## [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+## [38] 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+## [75] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+## [112] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+## [149] 2 2
+##
+## Within cluster sum of squares by cluster:
+## [1] 47.35062 210.77867
+## (between_SS / total_SS = 65.4 %)
+##
+## Available components:
+##
+## [1] "cluster" "centers" "totss" "withinss" "tot.withinss"
+## [6] "betweenss" "size" "iter" "ifault"
+Results: After printing the results, I see that our groupings resulted in 2 clusters of sizes 50 and
+100. We also see the cluster means for our 5 variables (“Sepal.Length”, “Sepal.Width”, “Petal.Length”,
+“Petal.Width”, and “Species”). The clustering vector also shows the cluster assignment for each observation.
+fviz_cluster(k1,data=df)
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+25 24
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+38 37
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52 53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+8821
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125126
+127
+128
+129
+130
+131
+132
+134 133
+135
+136
+137
+138
+139
+114140421
+143
+144
+145
+146
+147
+148
+149
+150
+−2
+−1
+0
+1
+2
+−2 0 2
+Dim1 (76.7%)
+Dim2 (18.3%)
+cluster
+a
+a
+1
+2
+Cluster plot
+k3<-kmeans(df,centers=3,nstart=25)
+k4<-kmeans(df,centers=4,nstart=25)
+k5<-kmeans(df,centers=5,nstart=25)
+plot1<-fviz_cluster(k1,geom="point",data=df)+ggtitle("k=2")
+plot2<-fviz_cluster(k3,geom="point",data=df)+ggtitle("k=3")
+plot3<-fviz_cluster(k4,geom="point",data=df)+ggtitle("k=4")
+plot4<-fviz_cluster(k5,geom="point",data=df)+ggtitle("k=5")
+library(gridExtra)
+##
+## Attaching package: ’gridExtra’
+## The following object is masked from ’package:dplyr’:
+##
+## combine
+grid.arrange(plot1,plot2,plot3,plot4,nrow=2)
+−2
+−1
+0
+1
+2
+−2 0 2
+Dim1 (76.7%)
+Dim2 (18.3%)
+cluster
+1
+2
+k=2
+−2
+−1
+0
+1
+2
+−2 0 2
+Dim1 (76.7%)
+Dim2 (18.3%)
+cluster
+1
+2
+3
+k=3
+−2
+−1
+0
+1
+2
+−2 0 2
+Dim1 (76.7%)
+Dim2 (18.3%)
+cluster
+1
+2
+3
+4
+k=4
+−2
+−1
+0
+1
+2
+−2 0 2
+Dim1 (76.7%)
+Dim2 (18.3%)
+cluster
+1
+2
+3
+4
+5
+k=5
+Cluster Scatter Plots: We can also see how the number of clusters(k) affects the differences in the results.
+The scatter plot of the clusters allows us to see where the separations of clusters have occurred.
+set.seed(34)
+wss<-function(k) {
+kmeans(df,k,nstart=10)$tot.withinss
+}
+k.values<-1:20
+wcsum_values<-map_dbl(k.values,wss)
+plot(k.values,wcsum_values,
+type="b", pch=12,frame=FALSE,
+xlab="Number of clusters K",
+ylab="Total within-clusters sum of squares")
+5 10 15 20
+0 100 300 500 700
+Number of clusters K
+Total within−clusters sum of squares
+set.seed(34)
+fviz_nbclust(df,kmeans,method="wss")
+200
+400
+600
+1 2 3 4 5 6 7 8 9 10
+Number of clusters k
+Total Within Sum of Square
+Optimal number of clusters
+Choosing the Optimal Method: Here, I used the elbow method to compute the k-means clustering
+algorithm, calculating the wss, and plotting the curve of wss to the number of clusters. Therefore, by seeing
+the location of the bend in the elbow plot, “Optimal number of clusters”, I can see that the optimal number
+of clusters is 2 for the iris dataset.
+Next, I will test out different sets of predictors to see how well the suggested value of k performs and how
+well each cluster predicts the flower type.
+rm(list=ls())
+data("iris")
+table(iris$Species)
+##
+## setosa versicolor virginica
+## 50 50 50
+library(ggplot2)
+set.seed(32)
+scale(1:4,center=TRUE,scale=TRUE)
+## [,1]
+## [1,] -1.1618950
+## [2,] -0.3872983
+## [3,] 0.3872983
+9
+## [4,] 1.1618950
+## attr(,"scaled:center")
+## [1] 2.5
+## attr(,"scaled:scale")
+## [1] 1.290994
+ggplot(iris,aes(Sepal.Length,Sepal.Width, color=Species))+geom_point()
+2.0
+2.5
+3.0
+3.5
+4.0
+4.5
+5 6 7 8
+Sepal.Length
+Sepal.Width
+Species
+setosa
+versicolor
+virginica
+cluster1<-kmeans(iris[,1:4],centers=2, nstart=5)
+cluster1
+## K-means clustering with 2 clusters of sizes 97, 53
+##
+## Cluster means:
+## Sepal.Length Sepal.Width Petal.Length Petal.Width
+## 1 6.301031 2.886598 4.958763 1.695876
+## 2 5.005660 3.369811 1.560377 0.290566
+##
+## Clustering vector:
+## [1] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+## [38] 2 2 2 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+## [75] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1
+## [112] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+## [149] 1 1
+##
+10
+## Within cluster sum of squares by cluster:
+## [1] 123.79588 28.55208
+## (between_SS / total_SS = 77.6 %)
+##
+## Available components:
+##
+## [1] "cluster" "centers" "totss" "withinss" "tot.withinss"
+## [6] "betweenss" "size" "iter" "ifault"
+cluster2<-kmeans(iris[,1:4],centers=3,nstart=10)
+cluster2
+## K-means clustering with 3 clusters of sizes 50, 38, 62
+##
+## Cluster means:
+## Sepal.Length Sepal.Width Petal.Length Petal.Width
+## 1 5.006000 3.428000 1.462000 0.246000
+## 2 6.850000 3.073684 5.742105 2.071053
+## 3 5.901613 2.748387 4.393548 1.433871
+##
+## Clustering vector:
+## [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+## [38] 1 1 1 1 1 1 1 1 1 1 1 1 1 3 3 2 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+## [75] 3 3 3 2 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 2 3 2 2 2 2 3 2 2 2 2
+## [112] 2 2 3 3 2 2 2 2 3 2 3 2 3 2 2 3 3 2 2 2 2 2 3 2 2 2 2 3 2 2 2 3 2 2 2 3 2
+## [149] 2 3
+##
+## Within cluster sum of squares by cluster:
+## [1] 15.15100 23.87947 39.82097
+## (between_SS / total_SS = 88.4 %)
+##
+## Available components:
+##
+## [1] "cluster" "centers" "totss" "withinss" "tot.withinss"
+## [6] "betweenss" "size" "iter" "ifault"
+cluster3<-kmeans(iris[,1:4],centers=4,nstart=15)
+cluster3
+## K-means clustering with 4 clusters of sizes 28, 40, 32, 50
+##
+## Cluster means:
+## Sepal.Length Sepal.Width Petal.Length Petal.Width
+## 1 5.532143 2.635714 3.960714 1.228571
+## 2 6.252500 2.855000 4.815000 1.625000
+## 3 6.912500 3.100000 5.846875 2.131250
+## 4 5.006000 3.428000 1.462000 0.246000
+##
+## Clustering vector:
+## [1] 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4
+## [38] 4 4 4 4 4 4 4 4 4 4 4 4 4 2 2 2 1 2 1 2 1 2 1 1 1 1 2 1 2 1 1 2 1 2 1 2 2
+## [75] 2 2 2 2 2 1 1 1 1 2 1 2 2 2 1 1 1 2 1 1 1 1 1 2 1 1 3 2 3 3 3 3 1 3 3 3 2
+## [112] 2 3 2 2 3 3 3 3 2 3 2 3 2 3 3 2 2 3 3 3 3 3 2 2 3 3 3 2 3 3 3 2 3 3 3 2 2
+11
+## [149] 3 2
+##
+## Within cluster sum of squares by cluster:
+## [1] 9.749286 13.624750 18.703437 15.151000
+## (between_SS / total_SS = 91.6 %)
+##
+## Available components:
+##
+## [1] "cluster" "centers" "totss" "withinss" "tot.withinss"
+## [6] "betweenss" "size" "iter" "ifault"
+cluster1$tot.withinss
+## [1] 152.348
+cluster2$tot.withinss
+## [1] 78.85144
+cluster3$tot.withinss
+## [1] 57.22847
+table(cluster1$cluster,iris$Species)
+##
+## setosa versicolor virginica
+## 1 0 47 50
+## 2 50 3 0
+table(cluster2$cluster, iris$Species)
+##
+## setosa versicolor virginica
+## 1 50 0 0
+## 2 0 2 36
+## 3 0 48 14
+table(cluster3$cluster,iris$Species)
+##
+## setosa versicolor virginica
+## 1 0 27 1
+## 2 0 23 17
+## 3 0 0 32
+## 4 50 0 0
+
+ggplot(iris,aes(Petal.Length,Petal.Width, color=Species))+geom_point()
+0.0
+0.5
+1.0
+1.5
+2.0
+2.5
+2 4 6
+Petal.Length
+Petal.Width
+Species
+setosa
+versicolor
+virginica
+cluster4<-kmeans(iris[,1:4],centers=2, nstart=5)
+cluster4
+## K-means clustering with 2 clusters of sizes 53, 97
+##
+## Cluster means:
+## Sepal.Length Sepal.Width Petal.Length Petal.Width
+## 1 5.005660 3.369811 1.560377 0.290566
+## 2 6.301031 2.886598 4.958763 1.695876
+##
+## Clustering vector:
+## [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+## [38] 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+## [75] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2
+## [112] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+## [149] 2 2
+##
+## Within cluster sum of squares by cluster:
+## [1] 28.55208 123.79588
+## (between_SS / total_SS = 77.6 %)
+##
+## Available components:
+##
+## [1] "cluster" "centers" "totss" "withinss" "tot.withinss"
+## [6] "betweenss" "size" "iter" "ifault"
+cluster5<-kmeans(iris[,1:4],centers=3,nstart=10)
+cluster5
+## K-means clustering with 3 clusters of sizes 38, 50, 62
+##
+## Cluster means:
+## Sepal.Length Sepal.Width Petal.Length Petal.Width
+## 1 6.850000 3.073684 5.742105 2.071053
+## 2 5.006000 3.428000 1.462000 0.246000
+## 3 5.901613 2.748387 4.393548 1.433871
+##
+## Clustering vector:
+## [1] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+## [38] 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 1 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+## [75] 3 3 3 1 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 1 3 1 1 1 1 3 1 1 1 1
+## [112] 1 1 3 3 1 1 1 1 3 1 3 1 3 1 1 3 3 1 1 1 1 1 3 1 1 1 1 3 1 1 1 3 1 1 1 3 1
+## [149] 1 3
+##
+## Within cluster sum of squares by cluster:
+## [1] 23.87947 15.15100 39.82097
+## (between_SS / total_SS = 88.4 %)
+##
+## Available components:
+##
+## [1] "cluster" "centers" "totss" "withinss" "tot.withinss"
+## [6] "betweenss" "size" "iter" "ifault"
+cluster6<-kmeans(iris[,1:4],centers=4,nstart=15)
+cluster6
+## K-means clustering with 4 clusters of sizes 32, 28, 40, 50
+##
+## Cluster means:
+## Sepal.Length Sepal.Width Petal.Length Petal.Width
+## 1 6.912500 3.100000 5.846875 2.131250
+## 2 5.532143 2.635714 3.960714 1.228571
+## 3 6.252500 2.855000 4.815000 1.625000
+## 4 5.006000 3.428000 1.462000 0.246000
+##
+## Clustering vector:
+## [1] 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4
+## [38] 4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 2 3 2 3 2 3 2 2 2 2 3 2 3 2 2 3 2 3 2 3 3
+## [75] 3 3 3 3 3 2 2 2 2 3 2 3 3 3 2 2 2 3 2 2 2 2 2 3 2 2 1 3 1 1 1 1 2 1 1 1 3
+## [112] 3 1 3 3 1 1 1 1 3 1 3 1 3 1 1 3 3 1 1 1 1 1 3 3 1 1 1 3 1 1 1 3 1 1 1 3 3
+## [149] 1 3
+##
+## Within cluster sum of squares by cluster:
+## [1] 18.703437 9.749286 13.624750 15.151000
+## (between_SS / total_SS = 91.6 %)
+##
+14
+## Available components:
+##
+## [1] "cluster" "centers" "totss" "withinss" "tot.withinss"
+## [6] "betweenss" "size" "iter" "ifault"
+cluster4$tot.withinss
+## [1] 152.348
+cluster5$tot.withinss
+## [1] 78.85144
+cluster6$tot.withinss
+## [1] 57.22847
+table(cluster4$cluster,iris$Species)
+##
+## setosa versicolor virginica
+## 1 50 3 0
+## 2 0 47 50
+table(cluster5$cluster, iris$Species)
+##
+## setosa versicolor virginica
+## 1 0 2 36
+## 2 50 0 0
+## 3 0 48 14
+table(cluster6$cluster,iris$Species)
+##
+## setosa versicolor virginica
+## 1 0 0 32
+## 2 0 27 1
+## 3 0 23 17
+## 4 50 0 0
+References
+All analyses were performed using R Statistical Software (R version 4.3.2 (2023-10-31 ucrt)).
+Allaire, J., Xie, Y., Dervieux, C., McPherson, J., Luraschi, J., Ushey, K., Atkins, A., Wickham, H., Cheng,
+J., Chang, W., & Iannone, R. (2023). rmarkdown: Dynamic Documents for R. https:// github.com/rstudio/
+rmarkdown
+Convert data frame column to numeric in R (2 example codes). Statistics Globe. (2022, March 16). https:
+// statisticsglobe.com/convert-data-frame-column-to-numeric-in-r#example2
+Convert data to numeric. R. (n.d.). https:// search.r-project.org/CRAN/refmans/ datawizard/ html/ to_
+numeric.html
+Fisher,R. A.. (1988). Iris. UCI Machine Learning Repository. https:// doi.org/ 10.24432/C56C76.
+Handling categorical data in R - part 2. Rsquared Academy Blog - Explore Discover Learn. (2022, January
+12). https:// blog.rsquaredacademy.com/handling-categorical-data-in-r-part-2/#:~:text=levels()%20is%20one%20of,to%20de
+aling%20with%20categorical%20data.&text=Other%20functions%20that%20you%20can,the%20labels%20of%20the%20levels.
+Hechenbichler, K. and Schliep, K. (2004): Weighted k-Nearest-Neighbor Techniques and Ordinal Classification.
+Collaborative Research Center 386, Discussion Paper 399 [PDF, 229kB]
+Karatzoglou A, Smola A, Hornik K (2023). kernlab: Kernel-Based Machine Learning Lab. R package version
+0.9-32, https://CRAN.R-project.org/ package=kernlab.
+Karatzoglou A, Smola A, Hornik K, Zeileis A (2004). “kernlab – An S4 Package for Kernel Methods in R.”
+Journal of Statistical Software, 11(9), 1–20. doi:10.18637/ jss.v011.i09 .
+K-means cluster analysis. K-means Cluster Analysi
